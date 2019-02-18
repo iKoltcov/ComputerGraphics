@@ -1,4 +1,5 @@
 import Labs.Lab1;
+import Labs.Lab2;
 import com.jogamp.newt.event.WindowAdapter;
 import com.jogamp.newt.event.WindowEvent;
 import com.jogamp.newt.opengl.GLWindow;
@@ -18,9 +19,8 @@ public class Main {
         glWindow.setAnimator(new FPSAnimator(glWindow, 60, true));
         glWindow.setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
         glWindow.setVisible(true);
-        glWindow.setTitle("Lab1");
 
-        glWindow.addGLEventListener(new Lab1(WINDOW_WIDTH, WINDOW_HEIGHT, glWindow));
+        glWindow.addGLEventListener(new Lab2(WINDOW_WIDTH, WINDOW_HEIGHT, glWindow));
         glWindow.addWindowListener(new WindowAdapter() {
             public void windowDestroyNotify(WindowEvent e) {
                 glWindow.getAnimator().stop();
