@@ -17,7 +17,9 @@ public class Lab1 implements GLEventListener {
 
     private Vec3f P0, P1, P2;
 
+    private int maxArrayCounter;
     private int[][] arrayCounter;
+    private Thread thread;
 
     public Lab1(int width, int height){
         this.width = width;
@@ -27,9 +29,10 @@ public class Lab1 implements GLEventListener {
         for(int i = 0; i < width; i++)
             for(int j = 0; j < height; j++)
                 arrayCounter[i][j] = 0;
+        maxArrayCounter = 0;
     }
 
-    private void addPoint(){
+    private synchronized void addPoint(){
         float randomA = random.nextFloat();
         float randomB = random.nextFloat();
 
@@ -52,8 +55,11 @@ public class Lab1 implements GLEventListener {
 
         int x = (int)newPoint.x;
         int y = (int)newPoint.y;
-        if(x >= 0 && x < width && y >= 0 && y < height)
-            arrayCounter[x][y]++;
+        if(x >= 0 && x < width && y >= 0 && y < height){
+            if(maxArrayCounter == arrayCounter[x][y]++){
+                maxArrayCounter++;
+            }
+        }
     }
 
     public void setGl(GLAutoDrawable drawable){
@@ -83,10 +89,20 @@ public class Lab1 implements GLEventListener {
         P0 = new Vec3f((float)(xCenter + (Math.cos(alpha1) * radius)), (float)(yCenter + (Math.sin(alpha1) * radius)), 0.0f);
         P1 = new Vec3f((float)(xCenter + (Math.cos(alpha2) * radius)), (float)(yCenter + (Math.sin(alpha2) * radius)), 0.0f);
         P2 = new Vec3f((float)(xCenter + (Math.cos(alpha3) * radius)), (float)(yCenter + (Math.sin(alpha3) * radius)), 0.0f);
+
+        thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while(!thread.isInterrupted())
+                    addPoint();
+            }
+        });
+        thread.start();
     }
 
     @Override
     public void dispose(GLAutoDrawable drawable) {
+        thread.interrupt();
         drawable.destroy();
     }
 
@@ -104,7 +120,7 @@ public class Lab1 implements GLEventListener {
         for(int i = 0; i < width; i++)
             for(int j = 0; j < height; j++)
                 if(arrayCounter[i][j] > 0){
-                    float color = 1.0f - (1.0f / (float)arrayCounter[i][j]);
+                    float color = ((float)arrayCounter[i][j] / (float)maxArrayCounter);
                     if(color > 1.0f)
                         color = 1.0f;
 
@@ -121,9 +137,6 @@ public class Lab1 implements GLEventListener {
         gl.glEnd();
 
         gl.glFlush();
-
-        for(int i = 0; i < 1000; i++)
-            addPoint();
     }
 
     @Override
