@@ -44,15 +44,15 @@ public class Lab1 implements GLEventListener {
             randomB = 1 - randomB;
         }
 
-        Vec3f A = new Vec3f(P1.x, P1.y, P1.z);
+        Vec3f A = new Vec3f(P1);
         A.sub(P0);
         A.mul(randomA);
 
-        Vec3f B = new Vec3f(P2.x, P2.y, P2.z);
+        Vec3f B = new Vec3f(P2);
         B.sub(P0);
         B.mul(randomB);
 
-        Vec3f newPoint = new Vec3f(A.x, A.y, A.z);
+        Vec3f newPoint = new Vec3f(A);
         newPoint.add(B);
         newPoint.add(P0);
 
