@@ -9,7 +9,7 @@ import com.sun.javafx.geom.Vec3f;
 
 import java.util.Random;
 
-public class Lab1 implements GLEventListener {
+public class Lab2 implements GLEventListener {
     private GL2 gl;
     private GLU glu;
     private int width, height;
@@ -17,13 +17,14 @@ public class Lab1 implements GLEventListener {
 
     private Random random = new Random();
 
-    private Vec3f P0, P1, P2;
+    private Vec3f P0;
+    private float R;
 
     private int maxArrayCounter;
     private int[][] arrayCounter;
     private Thread thread;
 
-    public Lab1(int width, int height, GLWindow glWindow){
+    public Lab2(int width, int height, GLWindow glWindow){
         this.width = width;
         this.height = height;
         this.glWindow = glWindow;
@@ -36,28 +37,11 @@ public class Lab1 implements GLEventListener {
     }
 
     private synchronized void addPoint(){
-        float randomA = random.nextFloat();
-        float randomB = random.nextFloat();
+        float length = R * (float)Math.sqrt(random.nextDouble());
+        float angle = 2.0f * (float)Math.PI * random.nextFloat();
 
-        if(randomA + randomB > 1){
-            randomA = 1 - randomA;
-            randomB = 1 - randomB;
-        }
-
-        Vec3f A = new Vec3f(P1);
-        A.sub(P0);
-        A.mul(randomA);
-
-        Vec3f B = new Vec3f(P2);
-        B.sub(P0);
-        B.mul(randomB);
-
-        Vec3f newPoint = new Vec3f(A);
-        newPoint.add(B);
-        newPoint.add(P0);
-
-        int x = (int)newPoint.x;
-        int y = (int)newPoint.y;
+        int x = (int)(P0.x + Math.cos(angle) * length);
+        int y = (int)(P0.y + Math.sin(angle) * length);
         if(x >= 0 && x < width && y >= 0 && y < height){
             if(maxArrayCounter == arrayCounter[x][y]++){
                 maxArrayCounter++;
@@ -82,17 +66,8 @@ public class Lab1 implements GLEventListener {
         gl.glViewport(0, 0, width, height);
         gl.glClearColor(0.2f, 0.2f, 0.3f, 1.0f);
 
-        float radius = Math.min(width, height) * 0.5f;
-        float xCenter = width * 0.5f,
-              yCenter = height * 0.5f;
-
-        float alpha1 = random.nextInt(180);
-        float alpha2 = alpha1 + 90;
-        float alpha3 = alpha2 + 90;
-
-        P0 = new Vec3f((float)(xCenter + (Math.cos(alpha1) * radius)), (float)(yCenter + (Math.sin(alpha1) * radius)), 0.0f);
-        P1 = new Vec3f((float)(xCenter + (Math.cos(alpha2) * radius)), (float)(yCenter + (Math.sin(alpha2) * radius)), 0.0f);
-        P2 = new Vec3f((float)(xCenter + (Math.cos(alpha3) * radius)), (float)(yCenter + (Math.sin(alpha3) * radius)), 0.0f);
+        R = Math.min(width, height) * 0.3f;
+        P0 = new Vec3f(width * 0.5f, height * 0.5f, 0.0f);
 
         thread = new Thread(new Runnable() {
             @Override
@@ -134,11 +109,12 @@ public class Lab1 implements GLEventListener {
                 }
         gl.glEnd();
 
-        gl.glColor3f( 1.0f, 1.0f, 1.0f );
         gl.glBegin(gl.GL_LINE_LOOP);
-            gl.glVertex3f(P0.x, P0.y, P0.z);
-            gl.glVertex3f(P1.x, P1.y, P1.z);
-            gl.glVertex3f(P2.x, P2.y, P2.z);
+        gl.glColor3f( 1.0f, 1.0f, 1.0f);
+        for(float angle = 0; angle < Math.PI * 2.0f; angle += Math.PI * 0.01f)
+        {
+            gl.glVertex3f((float)(P0.x + (Math.cos(angle) * R)), (float)(P0.y + (Math.sin(angle) * R)), 0.0f);
+        }
         gl.glEnd();
 
         gl.glFlush();
