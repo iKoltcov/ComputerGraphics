@@ -1,5 +1,6 @@
 package Labs;
 
+import com.jogamp.newt.opengl.GLWindow;
 import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.GLAutoDrawable;
 import com.jogamp.opengl.GLEventListener;
@@ -12,6 +13,7 @@ public class Lab1 implements GLEventListener {
     private GL2 gl;
     private GLU glu;
     private int width, height;
+    private final GLWindow glWindow;
 
     private Random random = new Random();
 
@@ -21,9 +23,10 @@ public class Lab1 implements GLEventListener {
     private int[][] arrayCounter;
     private Thread thread;
 
-    public Lab1(int width, int height){
+    public Lab1(int width, int height, GLWindow glWindow){
         this.width = width;
         this.height = height;
+        this.glWindow = glWindow;
 
         arrayCounter = new int[width][height];
         for(int i = 0; i < width; i++)
@@ -58,6 +61,7 @@ public class Lab1 implements GLEventListener {
         if(x >= 0 && x < width && y >= 0 && y < height){
             if(maxArrayCounter == arrayCounter[x][y]++){
                 maxArrayCounter++;
+                glWindow.setTitle(String.valueOf(maxArrayCounter));
             }
         }
     }
@@ -93,8 +97,9 @@ public class Lab1 implements GLEventListener {
         thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                while(!thread.isInterrupted())
+                while(!thread.isInterrupted()) {
                     addPoint();
+                }
             }
         });
         thread.start();
@@ -134,6 +139,17 @@ public class Lab1 implements GLEventListener {
             gl.glVertex3f(P0.x, P0.y, P0.z);
             gl.glVertex3f(P1.x, P1.y, P1.z);
             gl.glVertex3f(P2.x, P2.y, P2.z);
+        gl.glEnd();
+
+        gl.glBegin(gl.GL_LINE_LOOP);
+        float radius = Math.min(width, height) * 0.5f;
+        float xCenter = width * 0.5f,
+                yCenter = height * 0.5f;
+        gl.glColor3f( 0.6f, 0.6f, 0.6f);
+        for(float angle = 0; angle < Math.PI * 2.0f; angle += Math.PI * 0.01f)
+        {
+            gl.glVertex3f((float)(xCenter + (Math.cos(angle) * radius)), (float)(yCenter + (Math.sin(angle) * radius)), 0.0f);
+        }
         gl.glEnd();
 
         gl.glFlush();

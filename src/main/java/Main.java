@@ -20,7 +20,7 @@ public class Main {
         glWindow.setVisible(true);
         glWindow.setTitle("Lab1");
 
-        glWindow.addGLEventListener(new Lab1(WINDOW_WIDTH, WINDOW_HEIGHT));
+        glWindow.addGLEventListener(new Lab1(WINDOW_WIDTH, WINDOW_HEIGHT, glWindow));
         glWindow.addWindowListener(new WindowAdapter() {
             public void windowDestroyNotify(WindowEvent e) {
                 glWindow.getAnimator().stop();
