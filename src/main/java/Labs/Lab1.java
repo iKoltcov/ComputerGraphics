@@ -7,6 +7,7 @@ import com.jogamp.opengl.GLEventListener;
 import com.jogamp.opengl.glu.GLU;
 import com.sun.javafx.geom.Vec3f;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 public class Lab1 implements GLEventListener {
@@ -19,9 +20,9 @@ public class Lab1 implements GLEventListener {
 
     private Vec3f P0, P1, P2;
 
-    private int maxArrayCounter;
+    private volatile int maxArrayCounter;
     private int[][] arrayCounter;
-    private Thread thread;
+    private ArrayList<Thread> threads;
 
     public Lab1(int width, int height, GLWindow glWindow){
         this.width = width;
@@ -94,20 +95,26 @@ public class Lab1 implements GLEventListener {
         P1 = new Vec3f((float)(xCenter + (Math.cos(alpha2) * radius)), (float)(yCenter + (Math.sin(alpha2) * radius)), 0.0f);
         P2 = new Vec3f((float)(xCenter + (Math.cos(alpha3) * radius)), (float)(yCenter + (Math.sin(alpha3) * radius)), 0.0f);
 
-        thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while(!thread.isInterrupted()) {
-                    addPoint();
+        threads = new ArrayList<Thread>();
+        for(int i = 0; i < 10; i++){
+            Thread thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while(!Thread.currentThread().isInterrupted()) {
+                        addPoint();
+                    }
                 }
-            }
-        });
-        thread.start();
+            });
+            thread.start();
+            threads.add(thread);
+        }
     }
 
     @Override
     public void dispose(GLAutoDrawable drawable) {
-        thread.interrupt();
+        for (Thread thread : threads) {
+            thread.interrupt();
+        };
         drawable.destroy();
     }
 

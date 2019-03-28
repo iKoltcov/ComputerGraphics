@@ -7,6 +7,7 @@ import com.jogamp.opengl.GLEventListener;
 import com.jogamp.opengl.glu.GLU;
 import com.sun.javafx.geom.Vec3f;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 public class Lab2 implements GLEventListener {
@@ -20,9 +21,9 @@ public class Lab2 implements GLEventListener {
     private Vec3f P0;
     private float R;
 
-    private int maxArrayCounter;
+    private volatile int maxArrayCounter;
     private int[][] arrayCounter;
-    private Thread thread;
+    private ArrayList<Thread> threads;
 
     public Lab2(int width, int height, GLWindow glWindow){
         this.width = width;
@@ -69,20 +70,26 @@ public class Lab2 implements GLEventListener {
         R = Math.min(width, height) * 0.3f;
         P0 = new Vec3f(width * 0.5f, height * 0.5f, 0.0f);
 
-        thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while(!thread.isInterrupted()) {
-                    addPoint();
+        threads = new ArrayList<Thread>();
+        for(int i = 0; i < 1; i++){
+            Thread thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while(!Thread.currentThread().isInterrupted()) {
+                        addPoint();
+                    }
                 }
-            }
-        });
-        thread.start();
+            });
+            thread.start();
+            threads.add(thread);
+        }
     }
 
     @Override
     public void dispose(GLAutoDrawable drawable) {
-        thread.interrupt();
+        for (Thread thread : threads) {
+            thread.interrupt();
+        };
         drawable.destroy();
     }
 
