@@ -14,6 +14,9 @@ public class Quad {
 
     public int CollisionsCount;
 
+    public int x;
+    public int y;
+
     public Quad(Vec3f A, Vec3f B, Vec3f C, Vec3f D){
         this.A = A;
         this.B = B;
@@ -25,5 +28,11 @@ public class Quad {
 
         this.Square = 0.0f;
         this.kSquare = 0.0f;
+    }
+
+    public Quad(Vec3f A, Vec3f B, Vec3f C, Vec3f D, int x, int y){
+        this(A, B, C, D);
+        this.x = x;
+        this.y = y;
     }
 }
