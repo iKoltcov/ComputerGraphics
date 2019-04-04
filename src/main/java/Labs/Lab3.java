@@ -1,6 +1,6 @@
 package Labs;
 
-import Labs.Entities.Polygon;
+import Labs.Entities.Quad;
 import com.jogamp.newt.opengl.GLWindow;
 import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.GLAutoDrawable;
@@ -20,13 +20,15 @@ public class Lab3 implements GLEventListener {
     private Random random = new Random();
     private ArrayList<Thread> threads;
 
+    private final float RADIUS = 1.0f;
+    private final float STEP = (float)Math.PI * 0.01f;
 
-    private float radius = 1.0f;
     private volatile int maxArrayCounter;
     private float maxSquare;
-    private ArrayList<Polygon> polygons;
+    private ArrayList<Quad> quads;
     private Vec3f Camera;
     private Vec3f Target;
+    private Vec3f LastEye, LastRay;
 
     public Lab3(int width, int height, GLWindow glWindow){
         this.width = width;
@@ -35,45 +37,44 @@ public class Lab3 implements GLEventListener {
 
         Camera = new Vec3f(0.0f, 0.0f, 2.0f);
         Target = new Vec3f(0.0f, 0.0f, 0.0f);
-        polygons = new ArrayList<Polygon>();
+        quads = new ArrayList<Quad>();
         maxArrayCounter = 0;
 
-        float step = (float)Math.PI * 0.02f;
-        for(float th = 0.0f; th < Math.PI; th += step)
+        for(float th = 0.0f; th < Math.PI; th += STEP)
         {
-            for (float fi = 0.0f; fi < 2.0f * Math.PI; fi += step) {
+            for (float fi = 0.0f; fi < 2.0f * Math.PI; fi += STEP) {
                 Vec3f A = new Vec3f(
-                        Target.x + radius * (float)(Math.sin(th) * Math.cos(fi)),
-                        Target.y + radius * (float)(Math.sin(th) * Math.sin(fi)),
-                        Target.z + radius * (float)Math.cos(th));
-                Vec3f B1 = new Vec3f(
-                        Target.x + radius * (float)(Math.sin(th + step) * Math.cos(fi)),
-                        Target.y + radius * (float)(Math.sin(th + step) * Math.sin(fi)),
-                        Target.z + radius * (float)Math.cos(th + step));
-                Vec3f B2 = new Vec3f(
-                        Target.x + radius * (float)(Math.sin(th) * Math.cos(fi + step)),
-                        Target.y + radius * (float)(Math.sin(th) * Math.sin(fi + step)),
-                        Target.z + radius * (float)Math.cos(th));
+                        Target.x + RADIUS * (float)(Math.sin(th) * Math.cos(fi)),
+                        Target.y + RADIUS * (float)(Math.sin(th) * Math.sin(fi)),
+                        Target.z + RADIUS * (float)Math.cos(th));
+                Vec3f B = new Vec3f(
+                        Target.x + RADIUS * (float)(Math.sin(th + STEP) * Math.cos(fi)),
+                        Target.y + RADIUS * (float)(Math.sin(th + STEP) * Math.sin(fi)),
+                        Target.z + RADIUS * (float)Math.cos(th + STEP));
                 Vec3f C = new Vec3f(
-                        Target.x + radius * (float)(Math.sin(th + step) * Math.cos(fi + step)),
-                        Target.y + radius * (float)(Math.sin(th + step) * Math.sin(fi + step)),
-                        Target.z + radius * (float)Math.cos(th + step));
+                        Target.x + RADIUS * (float)(Math.sin(th) * Math.cos(fi + STEP)),
+                        Target.y + RADIUS * (float)(Math.sin(th) * Math.sin(fi + STEP)),
+                        Target.z + RADIUS * (float)Math.cos(th));
+                Vec3f D = new Vec3f(
+                        Target.x + RADIUS * (float)(Math.sin(th + STEP) * Math.cos(fi + STEP)),
+                        Target.y + RADIUS * (float)(Math.sin(th + STEP) * Math.sin(fi + STEP)),
+                        Target.z + RADIUS * (float)Math.cos(th + STEP));
 
-                polygons.add(new Polygon(A, B1, C));
-                polygons.add(new Polygon(A, B2, C));
+                quads.add(new Quad(A, B, C, D));
             }
         }
 
         maxSquare = 0.0f;
-        for (Polygon polygon : polygons) {
-            polygon.Square = distance(polygon.A, polygon.B) * distance(polygon.A, polygon.C) / 2.0f;
-            if(polygon.Square > maxSquare){
-                maxSquare = polygon.Square;
+        for (Quad quad : quads) {
+            quad.Square = distance(quad.A, quad.B) * distance(quad.A, quad.C) / 2.0f
+                        + distance(quad.D, quad.B) * distance(quad.D, quad.C) / 2.0f;
+            if(quad.Square > maxSquare){
+                maxSquare = quad.Square;
             }
         }
 
-        for (Polygon polygon : polygons) {
-            polygon.kSquare = polygon.Square / maxSquare;
+        for (Quad quad : quads) {
+            quad.kSquare = quad.Square / maxSquare;
         }
     }
 
@@ -86,7 +87,7 @@ public class Lab3 implements GLEventListener {
         cameraPosition = cameraPosition + 0.01f % ((float)Math.PI * 2.0f);
         Camera.x = (Target.x + 2.5f) * (float)Math.cos(cameraPosition);
         Camera.y = (Target.y + 2.5f) * (float)Math.sin(cameraPosition);
-        Camera.z = Target.z + (float)Math.sin(cameraPosition) * 1.5f;
+        Camera.z = Target.z + (float)Math.sin(cameraPosition) * 2.0f;
     }
 
     public void setGl(GLAutoDrawable drawable){
@@ -125,27 +126,36 @@ public class Lab3 implements GLEventListener {
     private synchronized void addPoint(){
         float angleTh = random.nextFloat() * ((float)Math.PI);
         float angleFi = random.nextFloat() * ((float)Math.PI * 2.0f);
-        Vec3f eye = new Vec3f(0.0f, 0.0f, 0.0f);
+        Vec3f eye = new Vec3f(Target.x, Target.y, Target.z);
         Vec3f ray = new Vec3f(
-                eye.x + (float)Math.cos(angleTh) * (float)Math.sin(angleFi) * radius,
-                eye.y + (float)Math.sin(angleTh) * (float)Math.sin(angleFi) * radius,
-                eye.z + (float)random.nextFloat());
+                eye.x + (float)Math.sin(angleTh) * (float)Math.cos(angleFi) * RADIUS,
+                eye.y + (float)Math.sin(angleTh) * (float)Math.sin(angleFi) * RADIUS,
+                eye.z + (float)Math.cos(angleTh));
 
-        for (Polygon polygon : polygons) {
-            if(rayInTriangle(polygon.A, polygon.B, polygon.C, eye, ray)){
-                if(maxArrayCounter == polygon.CollisionsCount++){
+        for (Quad quad : quads) {
+            if(rayInTriangle(quad.A, quad.B, quad.C, eye, ray) || rayInTriangle(quad.B, quad.C, quad.D, eye, ray))
+                if(rayInTriangle(quad.A, quad.B, quad.C, eye, ray) || rayInTriangle(quad.B, quad.C, quad.D, eye, ray)){
+
+                if(maxArrayCounter == quad.CollisionsCount++){
                     maxArrayCounter++;
                     glWindow.setTitle(String.valueOf(maxArrayCounter));
                 }
             }
         }
 
-        for (Polygon polygon : polygons) {
-            polygon.Color = (polygon.CollisionsCount / (float)maxArrayCounter * polygon.kSquare) * 0.5f + 0.5f;
+        for (Quad quad : quads) {
+            quad.Color = (quad.CollisionsCount / (float)maxArrayCounter/* * quad.kSquare*/) * 0.5f + 0.5f;
         }
+
+        LastEye = new Vec3f(eye.x, eye.y, eye.z);
+        LastRay = new Vec3f(ray.x, ray.y, ray.z);
+        LastRay.mul(3.0f);
     }
 
     private static boolean rayInTriangle(Vec3f A, Vec3f B, Vec3f C, Vec3f eye, Vec3f ray) {
+        if(new Vec3f(ray.x - eye.x, ray.y - eye.y, ray.z - eye.z).dot(new Vec3f(A.x - eye.x, A.y - eye.y, A.z - eye.z)) < 0.0f)
+            return false;
+
         Vec3f BA = new Vec3f();
         BA.sub(B, A);
         Vec3f CA = new Vec3f();
@@ -173,7 +183,7 @@ public class Lab3 implements GLEventListener {
         float u = (dot11 * dot02 - dot01 * dot12) * invDenom;
         float v = (dot00 * dot12 - dot01 * dot02) * invDenom;
 
-        if ((u >= 0) && (v >= 0) && (u + v < 1.0f))
+        if ((u >= 0) && (v >= 0) && (u + v <= 1.0f))
         {
             return true;
         }
@@ -202,22 +212,30 @@ public class Lab3 implements GLEventListener {
         gl.glMatrixMode(GL2.GL_MODELVIEW);
         gl.glLoadIdentity();
 
-        gl.glBegin(gl.GL_TRIANGLES);
-        for (Polygon polygon : polygons) {
-            gl.glColor3f(polygon.Color, polygon.Color, polygon.Color);
-            gl.glVertex3f(polygon.A.x, polygon.A.y, polygon.A.z);
-            gl.glVertex3f(polygon.B.x, polygon.B.y, polygon.B.z);
-            gl.glVertex3f(polygon.C.x, polygon.C.y, polygon.C.z);
+        gl.glBegin(gl.GL_QUADS);
+        for (Quad quad : quads) {
+            gl.glColor3f(quad.Color, quad.Color, quad.Color);
+            gl.glVertex3f(quad.A.x, quad.A.y, quad.A.z);
+            gl.glVertex3f(quad.B.x, quad.B.y, quad.B.z);
+            gl.glVertex3f(quad.D.x, quad.D.y, quad.D.z);
+            gl.glVertex3f(quad.C.x, quad.C.y, quad.C.z);
         }
+        gl.glEnd();
+
+        gl.glBegin(gl.GL_LINES);
+            gl.glColor3f(0.0f, 1.0f, 0.0f);
+            gl.glVertex3f(LastEye.x, LastEye.y, LastEye.z);
+            gl.glVertex3f(LastRay.x, LastRay.y, LastRay.z);
         gl.glEnd();
 
 //        gl.glColor3f(0.0f, 0.0f, 0.0f);
 //        float k = 1.01f;
-//        for (Polygon polygon : polygons) {
+//        for (Quad quad : quads) {
 //            gl.glBegin(gl.GL_LINE_LOOP);
-//                gl.glVertex3f(polygon.A.x * k, polygon.A.y * k, polygon.A.z * k);
-//                gl.glVertex3f(polygon.B.x * k, polygon.B.y * k, polygon.B.z * k);
-//                gl.glVertex3f(polygon.C.x * k, polygon.C.y * k, polygon.C.z * k);
+//                gl.glVertex3f(quad.A.x * k, quad.A.y * k, quad.A.z * k);
+//                gl.glVertex3f(quad.B.x * k, quad.B.y * k, quad.B.z * k);
+//                gl.glVertex3f(quad.D.x * k, quad.D.y * k, quad.D.z * k);
+//                gl.glVertex3f(quad.C.x * k, quad.C.y * k, quad.C.z * k);
 //            gl.glEnd();
 //        }
 
