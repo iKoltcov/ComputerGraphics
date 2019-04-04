@@ -24,6 +24,8 @@ public class Lab3 implements GLEventListener {
     private final float STEP = (float)Math.PI * 0.01f;
 
     private volatile int maxArrayCounter;
+    private int totalPoint = 0;
+
     private float maxSquare;
     private ArrayList<Quad> quads;
     private Vec3f Camera;
@@ -40,9 +42,11 @@ public class Lab3 implements GLEventListener {
         quads = new ArrayList<Quad>();
         maxArrayCounter = 0;
 
-        for(float th = 0.0f; th < Math.PI; th += STEP)
+        int i = 0;
+        for(float th = 0.0f; th < Math.PI; th += STEP, i++)
         {
-            for (float fi = 0.0f; fi < 2.0f * Math.PI; fi += STEP) {
+            int j = 0;
+            for (float fi = 0.0f; fi < 2.0f * Math.PI; fi += STEP, j++) {
                 Vec3f A = new Vec3f(
                         Target.x + RADIUS * (float)(Math.sin(th) * Math.cos(fi)),
                         Target.y + RADIUS * (float)(Math.sin(th) * Math.sin(fi)),
@@ -60,7 +64,7 @@ public class Lab3 implements GLEventListener {
                         Target.y + RADIUS * (float)(Math.sin(th + STEP) * Math.sin(fi + STEP)),
                         Target.z + RADIUS * (float)Math.cos(th + STEP));
 
-                quads.add(new Quad(A, B, C, D));
+                quads.add(new Quad(A, B, C, D, i, j));
             }
         }
 
@@ -131,6 +135,7 @@ public class Lab3 implements GLEventListener {
                 eye.x + (float)Math.sin(angleTh) * (float)Math.cos(angleFi) * RADIUS,
                 eye.y + (float)Math.sin(angleTh) * (float)Math.sin(angleFi) * RADIUS,
                 eye.z + (float)Math.cos(angleTh));
+        totalPoint++;
 
         for (Quad quad : quads) {
             if(rayInTriangle(quad.A, quad.B, quad.C, eye, ray) || rayInTriangle(quad.B, quad.C, quad.D, eye, ray))
@@ -138,7 +143,7 @@ public class Lab3 implements GLEventListener {
 
                 if(maxArrayCounter == quad.CollisionsCount++){
                     maxArrayCounter++;
-                    glWindow.setTitle(String.valueOf(maxArrayCounter));
+                    glWindow.setTitle(String.valueOf(maxArrayCounter) + "; " + String.valueOf(totalPoint));
                 }
             }
         }
@@ -210,7 +215,6 @@ public class Lab3 implements GLEventListener {
         glu.gluLookAt(Camera.x, Camera.y, Camera.z, Target.x, Target.y, Target.z, 0.0f, 0.0f, 1.0f);
 
         gl.glMatrixMode(GL2.GL_MODELVIEW);
-        gl.glLoadIdentity();
 
         gl.glBegin(gl.GL_QUADS);
         for (Quad quad : quads) {
@@ -229,7 +233,7 @@ public class Lab3 implements GLEventListener {
         gl.glEnd();
 
 //        gl.glColor3f(0.0f, 0.0f, 0.0f);
-//        float k = 1.01f;
+//        float k = 1.001f;
 //        for (Quad quad : quads) {
 //            gl.glBegin(gl.GL_LINE_LOOP);
 //                gl.glVertex3f(quad.A.x * k, quad.A.y * k, quad.A.z * k);
@@ -238,6 +242,22 @@ public class Lab3 implements GLEventListener {
 //                gl.glVertex3f(quad.C.x * k, quad.C.y * k, quad.C.z * k);
 //            gl.glEnd();
 //        }
+
+        gl.glMatrixMode(GL2.GL_PROJECTION);
+        gl.glLoadIdentity();
+        glu.gluOrtho2D(0, width, 0, height);
+        gl.glMatrixMode(GL2.GL_MODELVIEW);
+
+        float sizeCells = 2.0f;
+        gl.glBegin(gl.GL_QUADS);
+        for (Quad quad : quads) {
+            gl.glColor3f(quad.Color, quad.Color, quad.Color);
+            gl.glVertex2f(quad.x * sizeCells, quad.y * sizeCells);
+            gl.glVertex2f(quad.x * sizeCells + sizeCells, quad.y * sizeCells);
+            gl.glVertex2f(quad.x * sizeCells + sizeCells, quad.y * sizeCells + sizeCells);
+            gl.glVertex2f(quad.x * sizeCells, quad.y * sizeCells + sizeCells);
+        }
+        gl.glEnd();
 
         gl.glFlush();
     }
