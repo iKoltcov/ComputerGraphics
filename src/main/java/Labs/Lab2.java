@@ -10,7 +10,7 @@ import com.sun.javafx.geom.Vec3f;
 import java.util.ArrayList;
 import java.util.Random;
 
-public class Lab2 implements GLEventListener {
+public class Lab2 extends LabAbstract {
     private GL2 gl;
     private GLU glu;
     private int width, height;
@@ -37,7 +37,18 @@ public class Lab2 implements GLEventListener {
         maxArrayCounter = 0;
     }
 
-    private synchronized void addPoint(){
+    @Override
+    public void clear() {
+        arrayCounter = new int[width][height];
+        for(int i = 0; i < width; i++)
+            for(int j = 0; j < height; j++)
+                arrayCounter[i][j] = 0;
+        maxArrayCounter = 0;
+
+        glWindow.setTitle(String.valueOf(maxArrayCounter));
+    }
+
+    public synchronized void addPoint(){
         float length = R * (float)Math.sqrt(random.nextDouble());
         float angle = 2.0f * (float)Math.PI * random.nextFloat();
 
@@ -71,11 +82,15 @@ public class Lab2 implements GLEventListener {
         P0 = new Vec3f(width * 0.5f, height * 0.5f, 0.0f);
 
         threads = new ArrayList<Thread>();
-        for(int i = 0; i < 1; i++){
+        for(int i = 0; i < 4; i++){
             Thread thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
                     while(!Thread.currentThread().isInterrupted()) {
+                        if(isStop) {
+                            continue;
+                        }
+
                         addPoint();
                     }
                 }

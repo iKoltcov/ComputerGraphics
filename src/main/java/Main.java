@@ -1,8 +1,5 @@
-import Labs.Lab1;
-import Labs.Lab2;
-import Labs.Lab3;
-import com.jogamp.newt.event.WindowAdapter;
-import com.jogamp.newt.event.WindowEvent;
+import Labs.*;
+import com.jogamp.newt.event.*;
 import com.jogamp.newt.opengl.GLWindow;
 import com.jogamp.opengl.GLCapabilities;
 import com.jogamp.opengl.GLProfile;
@@ -21,11 +18,32 @@ public class Main {
         glWindow.setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
         glWindow.setVisible(true);
 
-        glWindow.addGLEventListener(new Lab3(WINDOW_WIDTH, WINDOW_HEIGHT, glWindow));
+        final LabAbstract lab = new Lab4(WINDOW_WIDTH, WINDOW_HEIGHT, glWindow);
+
+        glWindow.addGLEventListener(lab);
         glWindow.addWindowListener(new WindowAdapter() {
             public void windowDestroyNotify(WindowEvent e) {
                 glWindow.getAnimator().stop();
                 System.exit(0);
+            }
+        });
+
+        glWindow.addKeyListener(new KeyListener() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                if(e.VK_SPACE == e.getKeyCode())
+                    lab.toggleStop();
+
+                if(e.VK_ENTER == e.getKeyCode())
+                    lab.addPoint();
+
+                if(e.VK_R == e.getKeyCode())
+                    lab.clear();
             }
         });
 
