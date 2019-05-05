@@ -10,7 +10,7 @@ import com.sun.javafx.geom.Vec3f;
 import java.util.ArrayList;
 import java.util.Random;
 
-public class Lab3 extends LabAbstract {
+public class Lab4 extends LabAbstract {
     private GL2 gl;
     private GLU glu;
     private int width, height;
@@ -31,7 +31,7 @@ public class Lab3 extends LabAbstract {
     private Vec3f Target;
     private Vec3f LastEye, LastRay;
 
-    public Lab3(int width, int height, GLWindow glWindow){
+    public Lab4(int width, int height, GLWindow glWindow){
         this.width = width;
         this.height = height;
         this.glWindow = glWindow;
@@ -44,26 +44,26 @@ public class Lab3 extends LabAbstract {
         maxArrayCounter = 0;
 
         int i = 0;
-        for(float th = 0.0f; th < Math.PI; th += STEP, i++)
+        for(float th = 0.0f; th < 0.99f * Math.PI; th += STEP, i++)
         {
             int j = 0;
-            for (float fi = 0.0f; fi < 2.0f * Math.PI; fi += STEP, j++) {
+            for (float fi = 0.0f; fi < 1.0f * Math.PI; fi += STEP, j++) {
                 Vec3f A = new Vec3f(
-                        Target.x + RADIUS * (float)(Math.sin(th) * Math.cos(fi)),
-                        Target.y + RADIUS * (float)(Math.sin(th) * Math.sin(fi)),
-                        Target.z + RADIUS * (float)Math.cos(th));
+                        RADIUS * (float)(Math.sin(th) * Math.cos(fi)),
+                        RADIUS * (float)(Math.sin(th) * Math.sin(fi)),
+                        RADIUS * (float)Math.cos(th));
                 Vec3f B = new Vec3f(
-                        Target.x + RADIUS * (float)(Math.sin(th + STEP) * Math.cos(fi)),
-                        Target.y + RADIUS * (float)(Math.sin(th + STEP) * Math.sin(fi)),
-                        Target.z + RADIUS * (float)Math.cos(th + STEP));
+                        RADIUS * (float)(Math.sin(th + STEP) * Math.cos(fi)),
+                        RADIUS * (float)(Math.sin(th + STEP) * Math.sin(fi)),
+                        RADIUS * (float)Math.cos(th + STEP));
                 Vec3f C = new Vec3f(
-                        Target.x + RADIUS * (float)(Math.sin(th) * Math.cos(fi + STEP)),
-                        Target.y + RADIUS * (float)(Math.sin(th) * Math.sin(fi + STEP)),
-                        Target.z + RADIUS * (float)Math.cos(th));
+                        RADIUS * (float)(Math.sin(th) * Math.cos(fi + STEP)),
+                        RADIUS * (float)(Math.sin(th) * Math.sin(fi + STEP)),
+                        RADIUS * (float)Math.cos(th));
                 Vec3f D = new Vec3f(
-                        Target.x + RADIUS * (float)(Math.sin(th + STEP) * Math.cos(fi + STEP)),
-                        Target.y + RADIUS * (float)(Math.sin(th + STEP) * Math.sin(fi + STEP)),
-                        Target.z + RADIUS * (float)Math.cos(th + STEP));
+                        RADIUS * (float)(Math.sin(th + STEP) * Math.cos(fi + STEP)),
+                        RADIUS * (float)(Math.sin(th + STEP) * Math.sin(fi + STEP)),
+                        RADIUS * (float)Math.cos(th + STEP));
 
                 quads.add(new Quad(A, B, C, D, i, j));
             }
@@ -83,8 +83,7 @@ public class Lab3 extends LabAbstract {
         }
     }
 
-    @Override
-    public void clear() {
+    public void clear(){
         for (Quad quad : quads) {
             quad.CollisionsCount = 0;
             quad.Color = 1.0f;
@@ -96,15 +95,12 @@ public class Lab3 extends LabAbstract {
         LastRay = new Vec3f();
     }
 
-    private float cameraPosition = 0.0f;
+    private float cameraPosition = -1.57f;
     private void FrameLogic(){
-        if(!isStop){
-            cameraPosition = cameraPosition + 0.01f % ((float)Math.PI * 2.0f);
-        }
-
+        //cameraPosition = cameraPosition + 0.01f % ((float)Math.PI * 2.0f);
         Camera.x = (Target.x + 2.5f) * (float)Math.cos(cameraPosition);
         Camera.y = (Target.y + 2.5f) * (float)Math.sin(cameraPosition);
-        Camera.z = Target.z + (float)Math.sin(cameraPosition) * 2.0f;
+        Camera.z = Target.z /*+ (float)Math.sin(cameraPosition) * 2.01f*/;
     }
 
     public void setGl(GLAutoDrawable drawable){
@@ -145,13 +141,16 @@ public class Lab3 extends LabAbstract {
     }
 
     public synchronized void addPoint(){
-        float angleTh = random.nextFloat() * ((float)Math.PI);
+        Vec3f point = new Vec3f(0.0f, 0.0f, -1.0f);
+
+        float angleTh = random.nextFloat() * ((float)Math.PI * 1.0f);
         float angleFi = random.nextFloat() * ((float)Math.PI * 2.0f);
-        Vec3f point = new Vec3f(Target.x, Target.y, Target.z);
         Vec3f direction = new Vec3f(
-                point.x + (float)Math.sin(angleTh) * (float)Math.cos(angleFi) * RADIUS,
-                point.y + (float)Math.sin(angleTh) * (float)Math.sin(angleFi) * RADIUS,
-                point.z + (float)Math.cos(angleTh));
+                (float)Math.sin(angleTh) * (float)Math.cos(angleFi),
+                (float)Math.sin(angleTh) * (float)Math.sin(angleFi),
+                (float)Math.cos(angleTh));
+        direction.add(new Vec3f(0.0f, 0.0f, 2.0f * (float)random.nextGaussian()));
+        direction.normalize();
         totalPoint++;
 
         Quad refQuad = new Quad(null, null, null, null, 0, 0);
@@ -198,7 +197,7 @@ public class Lab3 extends LabAbstract {
         gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
         gl.glMatrixMode(GL2.GL_PROJECTION);
         gl.glLoadIdentity();
-        glu.gluPerspective(60.0f, width/ height, 0.1f, 1000.0f);
+        glu.gluPerspective(60.0f, width / height, 0.1f, 1000.0f);
         glu.gluLookAt(Camera.x, Camera.y, Camera.z, Target.x, Target.y, Target.z, 0.0f, 0.0f, 1.0f);
 
         gl.glMatrixMode(GL2.GL_MODELVIEW);
