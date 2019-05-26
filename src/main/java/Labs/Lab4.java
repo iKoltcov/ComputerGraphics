@@ -44,10 +44,10 @@ public class Lab4 extends LabAbstract {
         maxArrayCounter = 0;
 
         int i = 0;
-        for(float th = 0.0f; th < 0.99f * Math.PI; th += STEP, i++)
+        for(float th = 0.0f; th < 0.5f * Math.PI; th += STEP, i++)
         {
             int j = 0;
-            for (float fi = 0.0f; fi < 1.0f * Math.PI; fi += STEP, j++) {
+            for (float fi = 0.0f; fi < 2.0f * Math.PI; fi += STEP, j++) {
                 Vec3f A = new Vec3f(
                         RADIUS * (float)(Math.sin(th) * Math.cos(fi)),
                         RADIUS * (float)(Math.sin(th) * Math.sin(fi)),
@@ -79,7 +79,7 @@ public class Lab4 extends LabAbstract {
         }
 
         for (Quad quad : quads) {
-            quad.kSquare = quad.Square / maxSquare;
+            quad.kSquare = (1.0f - quad.Square / maxSquare) * 0.5f + 0.5f;
         }
     }
 
@@ -97,10 +97,10 @@ public class Lab4 extends LabAbstract {
 
     private float cameraPosition = -1.57f;
     private void FrameLogic(){
-        //cameraPosition = cameraPosition + 0.01f % ((float)Math.PI * 2.0f);
+        cameraPosition = cameraPosition + 0.01f % ((float)Math.PI * 2.0f);
         Camera.x = (Target.x + 2.5f) * (float)Math.cos(cameraPosition);
         Camera.y = (Target.y + 2.5f) * (float)Math.sin(cameraPosition);
-        Camera.z = Target.z /*+ (float)Math.sin(cameraPosition) * 2.01f*/;
+        Camera.z = Target.z + (float)Math.sin(cameraPosition) * 2.01f;
     }
 
     public void setGl(GLAutoDrawable drawable){
@@ -141,15 +141,14 @@ public class Lab4 extends LabAbstract {
     }
 
     public synchronized void addPoint(){
-        Vec3f point = new Vec3f(0.0f, 0.0f, -1.0f);
+        Vec3f point = new Vec3f(0.0f, 0.0f, 0.0f);
 
-        float angleTh = random.nextFloat() * ((float)Math.PI * 1.0f);
+        float angleTh = (float)Math.acos(random.nextDouble());
         float angleFi = random.nextFloat() * ((float)Math.PI * 2.0f);
         Vec3f direction = new Vec3f(
-                (float)Math.sin(angleTh) * (float)Math.cos(angleFi),
-                (float)Math.sin(angleTh) * (float)Math.sin(angleFi),
-                (float)Math.cos(angleTh));
-        direction.add(new Vec3f(0.0f, 0.0f, 2.0f * (float)random.nextGaussian()));
+                (float)Math.cos(angleTh) * (float)Math.sin(angleFi),
+                (float)Math.cos(angleTh) * (float)Math.cos(angleFi),
+                (float)Math.sin(angleTh));
         direction.normalize();
         totalPoint++;
 
@@ -158,6 +157,7 @@ public class Lab4 extends LabAbstract {
         for (Quad quad : quads) {
             Float firstTriangle = rayInTriangle(quad.A, quad.B, quad.C, point, direction);
             Float secondTriangle = rayInTriangle(quad.B, quad.C, quad.D, point, direction);
+
             if( firstTriangle != null || secondTriangle != null){
                 float distance = firstTriangle == null ? secondTriangle : firstTriangle;
 
@@ -174,12 +174,13 @@ public class Lab4 extends LabAbstract {
         }
 
         for (Quad quad : quads) {
-            quad.Color = (quad.CollisionsCount / (float)maxArrayCounter/* * quad.kSquare*/) * 0.5f + 0.5f;
+            quad.Color = (quad.CollisionsCount / (float)maxArrayCounter * quad.kSquare) * 0.5f + 0.5f;
         }
 
         LastEye.set(point);
         LastRay.set(point);
         LastRay.add(direction);
+        LastRay.mul(10.0f);
     }
 
     @Override
