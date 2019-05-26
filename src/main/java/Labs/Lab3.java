@@ -181,6 +181,7 @@ public class Lab3 extends LabAbstract {
         LastEye.set(point);
         LastRay.set(point);
         LastRay.add(direction);
+        LastRay.mul(10.0f);
     }
 
     @Override

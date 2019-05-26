@@ -15,29 +15,21 @@ public abstract class LabAbstract implements GLEventListener {
     }
 
     Float rayInTriangle(Vec3f A, Vec3f B, Vec3f C, Vec3f point, Vec3f direction) {
-        try {
-            Vec3f ray = new Vec3f(direction.x - point.x, direction.y - point.y, direction.z - point.z);
-            Vec3f rayToTriangle = new Vec3f(A.x - point.x, A.y - point.y, A.z - point.z);
-            if (ray.dot(rayToTriangle) < 0.0f)
-                return null;
+        Vec3f normal = new Vec3f();
+        normal.cross(new Vec3f(B.x - A.x, B.y - A.y, B.z - A.z), new Vec3f(C.x - A.x, C.y - A.y, C.z - A.z));
 
-            Vec3f BA = new Vec3f(B.x - A.x, B.y - A.y, B.z - A.z);
-            Vec3f CA = new Vec3f(C.x - A.x, C.y - A.y, C.z - A.z);
-
-            Vec3f N = new Vec3f();
-            N.cross(BA, CA);
-
-            float D = -(N.x * A.x) - (N.y * A.y) - (N.z * A.z);
-            float k = -(N.x * point.x + N.y * point.y + N.z * point.z + D) / (N.x * direction.x + N.y * direction.y + N.z * direction.z);
-            Vec3f P = new Vec3f(k * direction.x + point.x, k * direction.y + point.y, k * direction.z + point.z);
-
-            if(pointInTriangle(A, B, C, P))
-            {
-                return distance(P, point);
-            }
-        }
-        catch(Exception exception){
+        float D = -(normal.x * A.x) - (normal.y * A.y) - (normal.z * A.z);
+        float k = (point.dot(normal) - D) / direction.dot(normal);
+        if(k < 0)
+        {
             return null;
+        }
+
+        Vec3f P = new Vec3f(k * direction.x + point.x, k * direction.y + point.y, k * direction.z + point.z);
+
+        if(pointInTriangle(A, B, C, P))
+        {
+            return distance(P, point);
         }
 
         return null;
