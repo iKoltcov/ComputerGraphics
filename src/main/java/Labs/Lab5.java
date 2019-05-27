@@ -10,7 +10,7 @@ import com.sun.javafx.geom.Vec3f;
 import java.util.ArrayList;
 import java.util.Random;
 
-public class Lab4 extends LabAbstract {
+public class Lab5 extends LabAbstract {
     private GL2 gl;
     private GLU glu;
     private int width, height;
@@ -19,8 +19,11 @@ public class Lab4 extends LabAbstract {
     private Random random = new Random();
     private ArrayList<Thread> threads;
 
-    private final float RADIUS = 1.0f;
-    private final float STEP = (float)Math.PI * 0.01f;
+    private final float radius = 1.0f;
+    private final float step = (float)Math.PI * 0.01f;
+
+    private final float tableStep = (float)Math.PI * 0.01f;
+    private float[][] table;
 
     private volatile int maxArrayCounter;
     private int totalPoint = 0;
@@ -31,7 +34,7 @@ public class Lab4 extends LabAbstract {
     private Vec3f Target;
     private Vec3f LastEye, LastRay;
 
-    public Lab4(int width, int height, GLWindow glWindow){
+    public Lab5(int width, int height, GLWindow glWindow){
         this.width = width;
         this.height = height;
         this.glWindow = glWindow;
@@ -44,26 +47,26 @@ public class Lab4 extends LabAbstract {
         maxArrayCounter = 0;
 
         int i = 0;
-        for(float th = 0.0f; th < 0.5f * Math.PI; th += STEP, i++)
+        for(float th = 0.0f; th < 0.5f * Math.PI; th += step, i++)
         {
             int j = 0;
-            for (float fi = 0.0f; fi < 2.0f * Math.PI; fi += STEP, j++) {
+            for (float fi = 0.0f; fi < 2.0f * Math.PI; fi += step, j++) {
                 Vec3f A = new Vec3f(
-                        RADIUS * (float)(Math.sin(th) * Math.cos(fi)),
-                        RADIUS * (float)(Math.sin(th) * Math.sin(fi)),
-                        RADIUS * (float)Math.cos(th));
+                        radius * (float)(Math.sin(th) * Math.cos(fi)),
+                        radius * (float)(Math.sin(th) * Math.sin(fi)),
+                        radius * (float)Math.cos(th));
                 Vec3f B = new Vec3f(
-                        RADIUS * (float)(Math.sin(th + STEP) * Math.cos(fi)),
-                        RADIUS * (float)(Math.sin(th + STEP) * Math.sin(fi)),
-                        RADIUS * (float)Math.cos(th + STEP));
+                        radius * (float)(Math.sin(th + step) * Math.cos(fi)),
+                        radius * (float)(Math.sin(th + step) * Math.sin(fi)),
+                        radius * (float)Math.cos(th + step));
                 Vec3f C = new Vec3f(
-                        RADIUS * (float)(Math.sin(th) * Math.cos(fi + STEP)),
-                        RADIUS * (float)(Math.sin(th) * Math.sin(fi + STEP)),
-                        RADIUS * (float)Math.cos(th));
+                        radius * (float)(Math.sin(th) * Math.cos(fi + step)),
+                        radius * (float)(Math.sin(th) * Math.sin(fi + step)),
+                        radius * (float)Math.cos(th));
                 Vec3f D = new Vec3f(
-                        RADIUS * (float)(Math.sin(th + STEP) * Math.cos(fi + STEP)),
-                        RADIUS * (float)(Math.sin(th + STEP) * Math.sin(fi + STEP)),
-                        RADIUS * (float)Math.cos(th + STEP));
+                        radius * (float)(Math.sin(th + step) * Math.cos(fi + step)),
+                        radius * (float)(Math.sin(th + step) * Math.sin(fi + step)),
+                        radius * (float)Math.cos(th + step));
 
                 quads.add(new Quad(A, B, C, D, i, j));
             }
@@ -77,6 +80,13 @@ public class Lab4 extends LabAbstract {
                 maxSquare = quad.Square;
             }
         }
+
+        table = new float[Math.round(1.0f / tableStep + 1)][];
+        for(int _i = 0; _i < table.length; _i++){
+            float currentValue = _i * tableStep;
+            table[_i] = new float[]{(float)Math.acos(currentValue), currentValue };
+        }
+        table[table.length - 1] = new float[]{(float)Math.acos(1.0f), 1.0f };
 
         for (Quad quad : quads) {
             quad.kSquare = (1.0f - quad.Square / maxSquare);
@@ -112,7 +122,7 @@ public class Lab4 extends LabAbstract {
             glu = GLU.createGLU(gl);
         }
     }
-
+    
     @Override
     public void init(GLAutoDrawable drawable) {
         setGl(drawable);
@@ -141,17 +151,36 @@ public class Lab4 extends LabAbstract {
     }
 
     public synchronized void addPoint(){
-        float angleTh = random.nextFloat() * ((float)Math.PI);
-        float angleFi = random.nextFloat() * ((float)Math.PI * 2.0f);
-        Vec3f point = new Vec3f(Target.x, Target.y, Target.z);
-        Vec3f direction = new Vec3f(
-                point.x + (float)Math.sin(angleTh) * (float)Math.cos(angleFi) * RADIUS,
-                point.y + (float)Math.sin(angleTh) * (float)Math.sin(angleFi) * RADIUS,
-                point.z + (float)Math.cos(angleTh));
-        direction.add(new Vec3f(0.0f, 0.0f, 1.0f));
-        direction.normalize();
+        float randomValue = random.nextFloat();
+        int minimalNumber = 0;
+        float minimalDifferent = Math.abs(table[minimalNumber][1] - randomValue);
 
+        for(int interator = 1; interator < table.length; interator++){
+            float different = Math.abs(table[interator][1] - randomValue);
+            if(different < minimalDifferent){
+                minimalDifferent = different;
+                minimalNumber = interator;
+            }
+        }
+
+        float value = table[minimalNumber][0];
+        if(minimalNumber > 0 && minimalNumber + 1 < table.length){
+            value = table[minimalNumber - 1][0]
+                    + ((randomValue - table[minimalNumber - 1][1])
+                    * (table[minimalNumber + 1][0] - table[minimalNumber - 1][0]))
+                    / (table[minimalNumber + 1][1] - table[minimalNumber - 1][1]);
+        }
+
+        float angleTh = value;
+        float angleFi = random.nextFloat() * ((float)Math.PI * 2.0f);
+        Vec3f point = new Vec3f(0.0f, 0.0f, 0.0f);
+        Vec3f direction = new Vec3f(
+                (float)Math.cos(angleTh) * (float)Math.sin(angleFi),
+                (float)Math.cos(angleTh) * (float)Math.cos(angleFi),
+                (float)Math.sin(angleTh));
+        direction.normalize();
         totalPoint++;
+
         Quad refQuad = new Quad(null, null, null, null, 0, 0);
         Float minDistance = null;
         for (Quad quad : quads) {
