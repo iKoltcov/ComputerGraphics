@@ -18,7 +18,7 @@ public class Main {
         glWindow.setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
         glWindow.setVisible(true);
 
-        final LabAbstract lab = new Lab4(WINDOW_WIDTH, WINDOW_HEIGHT, glWindow);
+        final LabAbstract lab = new Lab3(WINDOW_WIDTH, WINDOW_HEIGHT, glWindow);
 
         glWindow.addGLEventListener(lab);
         glWindow.addWindowListener(new WindowAdapter() {
