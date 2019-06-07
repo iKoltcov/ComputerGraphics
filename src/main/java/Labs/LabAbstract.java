@@ -11,10 +11,16 @@ public abstract class LabAbstract implements GLEventListener {
     };
 
     float distance(Vec3f A, Vec3f B){
-        return (float)Math.sqrt( ((A.x - B.x) * (A.x - B.x)) + ((A.y - B.y) * (A.y - B.y)) + ((A.z - B.z) * (A.z - B.z)) );
+        Vec3f dif = new Vec3f(A);
+        dif.sub(B);
+        return dif.length();
     }
 
     Float rayInTriangle(Vec3f A, Vec3f B, Vec3f C, Vec3f point, Vec3f direction) {
+        if(!pointsValidation(A, B, C)){
+            return null;
+        }
+
         Vec3f normal = new Vec3f();
         normal.cross(new Vec3f(B.x - A.x, B.y - A.y, B.z - A.z), new Vec3f(C.x - A.x, C.y - A.y, C.z - A.z));
 
@@ -33,6 +39,28 @@ public abstract class LabAbstract implements GLEventListener {
         }
 
         return null;
+    }
+
+    private boolean pointsValidation(Vec3f A, Vec3f B, Vec3f C){
+        Vec3f ab = new Vec3f(A);
+        ab.sub(B);
+        if(ab.length() < 1e-5){
+            return false;
+        }
+
+        Vec3f ac = new Vec3f(A);
+        ac.sub(C);
+        if(ac.length() < 1e-5){
+            return false;
+        }
+
+        Vec3f bc = new Vec3f(B);
+        bc.sub(C);
+        if(bc.length() < 1e-5){
+            return false;
+        }
+
+        return true;
     }
 
     private boolean pointInTriangle(Vec3f A, Vec3f B, Vec3f C, Vec3f P){
