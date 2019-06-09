@@ -20,7 +20,8 @@ public class Lab3 extends LabAbstract {
     private ArrayList<Thread> threads;
 
     private final float RADIUS = 1.0f;
-    private final float STEP = (float)Math.PI * 0.01f;
+    private final double stackStep = Math.PI * 0.01;
+    private final double sectorStep = Math.PI * 0.01;
 
     private volatile int maxArrayCounter;
     private int totalPoint = 0;
@@ -43,27 +44,38 @@ public class Lab3 extends LabAbstract {
         quads = new ArrayList<Quad>();
         maxArrayCounter = 0;
 
-        int i = 0;
-        for(float th = 0.0f; th < Math.PI; th += STEP, i++)
+        for(int i = 0; i < 2.0 / stackStep; i++)
         {
-            int j = 0;
-            for (float fi = 0.0f; fi < 2.0f * Math.PI; fi += STEP, j++) {
+            double h = -1.0 + i * (stackStep);
+
+            double th = Math.asin(h);
+            if(Double.isNaN(th)){
+                continue;
+            }
+
+            double nextTh = Math.asin(h + stackStep);
+            if(Double.isNaN(nextTh)){
+                nextTh = Math.asin(1.0);
+            }
+
+            for(int j = 0; j < (2.0 * Math.PI) / sectorStep; j++){
+                double fi = sectorStep * j;
                 Vec3f A = new Vec3f(
-                        Target.x + RADIUS * (float)(Math.sin(th) * Math.cos(fi)),
-                        Target.y + RADIUS * (float)(Math.sin(th) * Math.sin(fi)),
-                        Target.z + RADIUS * (float)Math.cos(th));
+                        Target.x + (float)(Math.cos(th) * Math.cos(fi)),
+                        Target.y + (float)(Math.cos(th) * Math.sin(fi)),
+                        Target.z + (float)Math.sin(th));
                 Vec3f B = new Vec3f(
-                        Target.x + RADIUS * (float)(Math.sin(th + STEP) * Math.cos(fi)),
-                        Target.y + RADIUS * (float)(Math.sin(th + STEP) * Math.sin(fi)),
-                        Target.z + RADIUS * (float)Math.cos(th + STEP));
+                        Target.x + (float)(Math.cos(nextTh) * Math.cos(fi)),
+                        Target.y + (float)(Math.cos(nextTh) * Math.sin(fi)),
+                        Target.z + (float)Math.sin(nextTh));
                 Vec3f C = new Vec3f(
-                        Target.x + RADIUS * (float)(Math.sin(th) * Math.cos(fi + STEP)),
-                        Target.y + RADIUS * (float)(Math.sin(th) * Math.sin(fi + STEP)),
-                        Target.z + RADIUS * (float)Math.cos(th));
+                        Target.x + (float)(Math.cos(th) * Math.cos(fi + sectorStep)),
+                        Target.y + (float)(Math.cos(th) * Math.sin(fi + sectorStep)),
+                        Target.z + (float)Math.sin(th));
                 Vec3f D = new Vec3f(
-                        Target.x + RADIUS * (float)(Math.sin(th + STEP) * Math.cos(fi + STEP)),
-                        Target.y + RADIUS * (float)(Math.sin(th + STEP) * Math.sin(fi + STEP)),
-                        Target.z + RADIUS * (float)Math.cos(th + STEP));
+                        Target.x + (float)(Math.cos(nextTh) * Math.cos(fi + sectorStep)),
+                        Target.y + (float)(Math.cos(nextTh) * Math.sin(fi + sectorStep)),
+                        Target.z + (float)Math.sin(nextTh));
 
                 quads.add(new Quad(A, B, C, D, i, j));
             }
@@ -72,14 +84,14 @@ public class Lab3 extends LabAbstract {
         maxSquare = 0.0f;
         for (Quad quad : quads) {
             quad.Square = distance(quad.A, quad.B) * distance(quad.A, quad.C) / 2.0f
-                        + distance(quad.D, quad.B) * distance(quad.D, quad.C) / 2.0f;
+                    + distance(quad.D, quad.B) * distance(quad.D, quad.C) / 2.0f;
             if(quad.Square > maxSquare){
                 maxSquare = quad.Square;
             }
         }
 
         for (Quad quad : quads) {
-            quad.kSquare = quad.Square / maxSquare;
+            quad.kSquare = maxSquare / quad.Square;
         }
     }
 
@@ -145,20 +157,23 @@ public class Lab3 extends LabAbstract {
     }
 
     public synchronized void addPoint(){
-        float angleTh = random.nextFloat() * ((float)Math.PI);
+        float h = (2.0f * random.nextFloat() - 1.0f) * RADIUS;
+        float angleTh = (float)Math.asin(h / RADIUS);
         float angleFi = random.nextFloat() * ((float)Math.PI * 2.0f);
+
         Vec3f point = new Vec3f(Target.x, Target.y, Target.z);
         Vec3f direction = new Vec3f(
-                point.x + (float)Math.sin(angleTh) * (float)Math.cos(angleFi) * RADIUS,
-                point.y + (float)Math.sin(angleTh) * (float)Math.sin(angleFi) * RADIUS,
-                point.z + (float)Math.cos(angleTh));
+                point.x + (float)Math.cos(angleTh) * (float)Math.cos(angleFi) * RADIUS,
+                point.y + (float)Math.cos(angleTh) * (float)Math.sin(angleFi) * RADIUS,
+                point.z + (float)Math.sin(angleTh) * RADIUS);
+        direction.normalize();
         totalPoint++;
 
         Quad refQuad = new Quad(null, null, null, null, 0, 0);
         Float minDistance = null;
         for (Quad quad : quads) {
-            Float firstTriangle = rayInTriangle(quad.A, quad.B, quad.C, point, direction);
-            Float secondTriangle = rayInTriangle(quad.B, quad.C, quad.D, point, direction);
+            Float firstTriangle = rayInTriangle(quad.A, quad.B, quad.D, point, direction);
+            Float secondTriangle = rayInTriangle(quad.A, quad.C, quad.D, point, direction);
             if( firstTriangle != null || secondTriangle != null){
                 float distance = firstTriangle == null ? secondTriangle : firstTriangle;
 
@@ -175,7 +190,7 @@ public class Lab3 extends LabAbstract {
         }
 
         for (Quad quad : quads) {
-            quad.Color = (quad.CollisionsCount / (float)maxArrayCounter/* * quad.kSquare*/) * 0.5f + 0.5f;
+            quad.Color = (quad.CollisionsCount / (float)maxArrayCounter * quad.kSquare) * 0.5f + 0.5f;
         }
 
         LastEye.set(point);
@@ -240,10 +255,10 @@ public class Lab3 extends LabAbstract {
         gl.glBegin(gl.GL_QUADS);
         for (Quad quad : quads) {
             gl.glColor3f(quad.Color, quad.Color, quad.Color);
-            gl.glVertex2f(quad.x * sizeCells, quad.y * sizeCells);
-            gl.glVertex2f(quad.x * sizeCells + sizeCells, quad.y * sizeCells);
-            gl.glVertex2f(quad.x * sizeCells + sizeCells, quad.y * sizeCells + sizeCells);
-            gl.glVertex2f(quad.x * sizeCells, quad.y * sizeCells + sizeCells);
+            gl.glVertex2f(quad.y * sizeCells, quad.x * sizeCells);
+            gl.glVertex2f(quad.y * sizeCells + sizeCells, quad.x * sizeCells);
+            gl.glVertex2f(quad.y * sizeCells + sizeCells, quad.x * sizeCells + sizeCells);
+            gl.glVertex2f(quad.y * sizeCells, quad.x * sizeCells + sizeCells);
         }
         gl.glEnd();
 

@@ -3,7 +3,6 @@ package Labs;
 import com.jogamp.newt.opengl.GLWindow;
 import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.GLAutoDrawable;
-import com.jogamp.opengl.GLEventListener;
 import com.jogamp.opengl.glu.GLU;
 import com.sun.javafx.geom.Vec3f;
 
@@ -21,7 +20,9 @@ public class Lab2 extends LabAbstract {
     private Vec3f P0;
     private float R;
 
+
     private volatile int maxArrayCounter;
+    private volatile long totalPoints;
     private int[][] arrayCounter;
     private ArrayList<Thread> threads;
 
@@ -35,6 +36,7 @@ public class Lab2 extends LabAbstract {
             for(int j = 0; j < height; j++)
                 arrayCounter[i][j] = 0;
         maxArrayCounter = 0;
+        totalPoints = 0;
     }
 
     @Override
@@ -49,6 +51,8 @@ public class Lab2 extends LabAbstract {
     }
 
     public synchronized void addPoint(){
+        totalPoints++;
+
         float length = R * (float)Math.sqrt(random.nextDouble());
         float angle = 2.0f * (float)Math.PI * random.nextFloat();
 
@@ -57,7 +61,7 @@ public class Lab2 extends LabAbstract {
         if(x >= 0 && x < width && y >= 0 && y < height){
             if(maxArrayCounter == arrayCounter[x][y]++){
                 maxArrayCounter++;
-                glWindow.setTitle(String.valueOf(maxArrayCounter));
+                glWindow.setTitle(String.format("%d / %d", maxArrayCounter, totalPoints));
             }
         }
     }
@@ -87,7 +91,8 @@ public class Lab2 extends LabAbstract {
                 @Override
                 public void run() {
                     while(!Thread.currentThread().isInterrupted()) {
-                        if(isStop) {
+                        if(isStop || totalPoints > 1000000000) {
+                            glWindow.setTitle(String.format("%d / %d", maxArrayCounter, totalPoints));
                             continue;
                         }
 
@@ -122,7 +127,7 @@ public class Lab2 extends LabAbstract {
         for(int i = 0; i < width; i++)
             for(int j = 0; j < height; j++)
                 if(arrayCounter[i][j] > 0){
-                    float color = ((float)arrayCounter[i][j] / (float)maxArrayCounter);
+                    float color = ((float)arrayCounter[i][j] / (float)maxArrayCounter) * 0.5f + 0.5f;
                     if(color > 1.0f)
                         color = 1.0f;
 

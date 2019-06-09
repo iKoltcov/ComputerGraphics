@@ -21,6 +21,7 @@ public class Lab1 extends LabAbstract {
     private Vec3f P0, P1, P2;
 
     private volatile int maxArrayCounter;
+    private volatile long totalPoints;
     private int[][] arrayCounter;
     private ArrayList<Thread> threads;
 
@@ -34,6 +35,7 @@ public class Lab1 extends LabAbstract {
             for(int j = 0; j < height; j++)
                 arrayCounter[i][j] = 0;
         maxArrayCounter = 0;
+        totalPoints = 0;
     }
 
 
@@ -51,6 +53,7 @@ public class Lab1 extends LabAbstract {
     public synchronized void addPoint(){
         float randomA = random.nextFloat();
         float randomB = random.nextFloat();
+        totalPoints++;
 
         if(randomA + randomB > 1){
             randomA = 1 - randomA;
@@ -74,7 +77,7 @@ public class Lab1 extends LabAbstract {
         if(x >= 0 && x < width && y >= 0 && y < height){
             if(maxArrayCounter == arrayCounter[x][y]++){
                 maxArrayCounter++;
-                glWindow.setTitle(String.valueOf(maxArrayCounter));
+                glWindow.setTitle(String.format("%d / %d", maxArrayCounter, totalPoints));
             }
         }
     }
@@ -113,7 +116,9 @@ public class Lab1 extends LabAbstract {
                 @Override
                 public void run() {
                     while(!Thread.currentThread().isInterrupted()) {
-                        if(isStop){
+                        if(isStop || totalPoints > 10000000){
+
+                            glWindow.setTitle(String.format("%d / %d", maxArrayCounter, totalPoints));
                             continue;
                         }
 
@@ -148,7 +153,7 @@ public class Lab1 extends LabAbstract {
         for(int i = 0; i < width; i++)
             for(int j = 0; j < height; j++)
                 if(arrayCounter[i][j] > 0){
-                    float color = ((float)arrayCounter[i][j] / (float)maxArrayCounter);
+                    float color = ((float)arrayCounter[i][j] / (float)maxArrayCounter) * 0.5f + 0.5f;
                     if(color > 1.0f)
                         color = 1.0f;
 
