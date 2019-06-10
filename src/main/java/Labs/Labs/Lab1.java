@@ -1,16 +1,16 @@
 package Labs;
 
+import Labs.Abstractions.LabAbstraction;
 import com.jogamp.newt.opengl.GLWindow;
 import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.GLAutoDrawable;
-import com.jogamp.opengl.GLEventListener;
 import com.jogamp.opengl.glu.GLU;
 import com.sun.javafx.geom.Vec3f;
 
 import java.util.ArrayList;
 import java.util.Random;
 
-public class Lab1 extends LabAbstract {
+public class Lab1 extends LabAbstraction {
     private GL2 gl;
     private GLU glu;
     private int width, height;

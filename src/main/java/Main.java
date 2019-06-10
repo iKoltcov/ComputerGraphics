@@ -1,4 +1,5 @@
 import Labs.*;
+import Labs.Abstractions.LabAbstraction;
 import com.jogamp.newt.event.*;
 import com.jogamp.newt.opengl.GLWindow;
 import com.jogamp.opengl.GLCapabilities;
@@ -18,7 +19,7 @@ public class Main {
         glWindow.setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
         glWindow.setVisible(true);
 
-        final LabAbstract lab = new Lab3(WINDOW_WIDTH, WINDOW_HEIGHT, glWindow);
+        final LabAbstraction lab = new Lab5(WINDOW_WIDTH, WINDOW_HEIGHT, glWindow);
 
         glWindow.addGLEventListener(lab);
         glWindow.addWindowListener(new WindowAdapter() {

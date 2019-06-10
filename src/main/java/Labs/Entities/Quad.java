@@ -1,23 +1,25 @@
 package Labs.Entities;
 
-import com.sun.javafx.geom.Vec3f;
+import Labs.Abstractions.ContainsTriangleAbstraction;
+import Labs.Interfaces.ICollided;
+import com.sun.javafx.geom.Vec3d;
 
-public class Quad {
-    public Vec3f A;
-    public Vec3f B;
-    public Vec3f C;
-    public Vec3f D;
+public class Quad extends ContainsTriangleAbstraction implements ICollided {
+    public Vec3d A;
+    public Vec3d B;
+    public Vec3d C;
+    public Vec3d D;
 
-    public float Color;
-    public float Square;
-    public float kSquare;
+    public double Color;
+    public double Square;
+    public double kSquare;
 
     public int CollisionsCount;
 
-    public int x;
-    public int y;
+    public int sectorX;
+    public int sectorY;
 
-    public Quad(Vec3f A, Vec3f B, Vec3f C, Vec3f D){
+    public Quad(Vec3d A, Vec3d B, Vec3d C, Vec3d D){
         this.A = A;
         this.B = B;
         this.C = C;
@@ -30,9 +32,17 @@ public class Quad {
         this.kSquare = 0.0f;
     }
 
-    public Quad(Vec3f A, Vec3f B, Vec3f C, Vec3f D, int x, int y){
+    public Quad(Vec3d A, Vec3d B, Vec3d C, Vec3d D, int sectorX, int sectorY){
         this(A, B, C, D);
-        this.x = x;
-        this.y = y;
+        this.sectorX = sectorX;
+        this.sectorY = sectorY;
+    }
+
+    @Override
+    public Double DistanceToCollision(Vec3d origin, Vec3d direction) {
+        Double firstTriangle = rayInTriangle(A, B, C, origin, direction);
+        Double secondTriangle = rayInTriangle(B, C, D, origin, direction);
+
+        return firstTriangle == null ? secondTriangle : firstTriangle;
     }
 }
