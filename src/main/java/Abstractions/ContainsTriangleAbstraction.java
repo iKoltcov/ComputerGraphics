@@ -1,13 +1,10 @@
 package Abstractions;
 
+import Helpers.MathHelper;
 import com.sun.javafx.geom.Vec3d;
 
 public abstract class ContainsTriangleAbstraction {
     protected Double rayInTriangle(Vec3d A, Vec3d B, Vec3d C, Vec3d point, Vec3d direction) {
-        if(!pointsValidation(A, B, C)){
-            return null;
-        }
-
         Vec3d normal = new Vec3d();
         normal.cross(new Vec3d(B.x - A.x, B.y - A.y, B.z - A.z), new Vec3d(C.x - A.x, C.y - A.y, C.z - A.z));
 
@@ -22,38 +19,10 @@ public abstract class ContainsTriangleAbstraction {
 
         if(pointInTriangle(A, B, C, P))
         {
-            return distance(P, point);
+            return MathHelper.distance(P, point);
         }
 
         return null;
-    }
-
-    private double distance(Vec3d A, Vec3d B){
-        Vec3d dif = new Vec3d(A);
-        dif.sub(B);
-        return dif.length();
-    }
-
-    private boolean pointsValidation(Vec3d A, Vec3d B, Vec3d C){
-        Vec3d ab = new Vec3d(A);
-        ab.sub(B);
-        if(ab.length() < 1e-5){
-            return false;
-        }
-
-        Vec3d ac = new Vec3d(A);
-        ac.sub(C);
-        if(ac.length() < 1e-5){
-            return false;
-        }
-
-        Vec3d bc = new Vec3d(B);
-        bc.sub(C);
-        if(bc.length() < 1e-5){
-            return false;
-        }
-
-        return true;
     }
 
     private boolean pointInTriangle(Vec3d A, Vec3d B, Vec3d C, Vec3d P){

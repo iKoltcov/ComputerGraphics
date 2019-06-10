@@ -1,10 +1,11 @@
 package Entities;
 
 import Abstractions.ContainsTriangleAbstraction;
+import Helpers.MathHelper;
 import Interfaces.ICollided;
 import com.sun.javafx.geom.Vec3d;
 
-public class Quad extends ContainsTriangleAbstraction implements ICollided {
+public class QuadEntity extends ContainsTriangleAbstraction implements ICollided {
     public Vec3d A;
     public Vec3d B;
     public Vec3d C;
@@ -19,7 +20,7 @@ public class Quad extends ContainsTriangleAbstraction implements ICollided {
     public int sectorX;
     public int sectorY;
 
-    public Quad(Vec3d A, Vec3d B, Vec3d C, Vec3d D){
+    public QuadEntity(Vec3d A, Vec3d B, Vec3d C, Vec3d D){
         this.A = A;
         this.B = B;
         this.C = C;
@@ -32,7 +33,7 @@ public class Quad extends ContainsTriangleAbstraction implements ICollided {
         this.kSquare = 0.0f;
     }
 
-    public Quad(Vec3d A, Vec3d B, Vec3d C, Vec3d D, int sectorX, int sectorY){
+    public QuadEntity(Vec3d A, Vec3d B, Vec3d C, Vec3d D, int sectorX, int sectorY){
         this(A, B, C, D);
         this.sectorX = sectorX;
         this.sectorY = sectorY;

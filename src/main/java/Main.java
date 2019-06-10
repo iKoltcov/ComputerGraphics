@@ -1,4 +1,6 @@
 import Abstractions.LabAbstraction;
+import Labs.Lab3;
+import Labs.Lab4;
 import Labs.Lab5;
 import com.jogamp.newt.event.*;
 import com.jogamp.newt.opengl.GLWindow;
