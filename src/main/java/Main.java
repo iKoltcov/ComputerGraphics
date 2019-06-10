@@ -1,5 +1,5 @@
-import Labs.*;
-import Labs.Abstractions.LabAbstraction;
+import Abstractions.LabAbstraction;
+import Labs.Lab5;
 import com.jogamp.newt.event.*;
 import com.jogamp.newt.opengl.GLWindow;
 import com.jogamp.opengl.GLCapabilities;

@@ -1,18 +1,17 @@
 package Labs;
 
-import Labs.Abstractions.LabAbstraction;
-import Labs.Entities.Quad;
+import Abstractions.LabAbstraction;
+import Entities.Quad;
 import com.jogamp.newt.opengl.GLWindow;
 import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.GLAutoDrawable;
 import com.jogamp.opengl.glu.GLU;
-import com.sun.javafx.geom.Vec2d;
 import com.sun.javafx.geom.Vec3d;
 
 import java.util.ArrayList;
 import java.util.Random;
 
-public class Lab5 extends LabAbstraction {
+public class Lab3 extends LabAbstraction {
     private GL2 gl;
     private GLU glu;
     private int width, height;
@@ -22,12 +21,8 @@ public class Lab5 extends LabAbstraction {
     private ArrayList<Thread> threads;
 
     private final double radius = 1.0;
-    private final double stackStep = Math.PI * 0.005;
+    private final double stackStep = Math.PI * 0.01;
     private final double sectorStep = Math.PI * 0.01;
-
-    private final double tableMax = 1.0;
-    private final double tableStep = Math.PI * 0.005;
-    private Vec2d[] table;
 
     private volatile int maxArrayCounter;
     private int totalPoint = 0;
@@ -38,7 +33,7 @@ public class Lab5 extends LabAbstraction {
     private Vec3d Target;
     private Vec3d LastEye, LastRay;
 
-    public Lab5(int width, int height, GLWindow glWindow){
+    public Lab3(int width, int height, GLWindow glWindow){
         this.width = width;
         this.height = height;
         this.glWindow = glWindow;
@@ -50,9 +45,9 @@ public class Lab5 extends LabAbstraction {
         quads = new ArrayList<Quad>();
         maxArrayCounter = 0;
 
-        for(int i = 0; i < 1.0 / stackStep; i++)
+        for(int i = 0; i < 2.0 / stackStep; i++)
         {
-            double h = i * (stackStep);
+            double h = -1.0 + i * (stackStep);
 
             double th = Math.asin(h);
             if(Double.isNaN(th)){
@@ -87,48 +82,25 @@ public class Lab5 extends LabAbstraction {
             }
         }
 
-        maxSquare = 0.0;
+        maxSquare = 0.0f;
         for (Quad quad : quads) {
-            quad.Square = distance(quad.A, quad.B) * distance(quad.A, quad.C) / 2.0
-                        + distance(quad.D, quad.B) * distance(quad.D, quad.C) / 2.0;
+            quad.Square = distance(quad.A, quad.B) * distance(quad.A, quad.C) / 2.0f
+                    + distance(quad.D, quad.B) * distance(quad.D, quad.C) / 2.0f;
             if(quad.Square > maxSquare){
                 maxSquare = quad.Square;
             }
         }
 
-        table = new Vec2d[(int)Math.round(tableMax / tableStep) + 1];
-        for(int iterator = 0; iterator < table.length; iterator++){
-            double currentValue = iterator * tableStep;
-            double previousValue = iterator > 0 ? table[iterator - 1].y : 0.0;
-            table[iterator] = new Vec2d(currentValue, (previousValue + function(currentValue, tableStep)));
-        }
-        table[table.length - 1] = new Vec2d(tableMax, table[table.length - 2].y + function(tableMax, tableStep));
-
-        double maxValue = Double.MIN_VALUE;
-        for (Vec2d row : table) {
-            if(row.y > maxValue)
-            {
-                maxValue = row.y;
-            }
-        }
-
-        for (Vec2d row : table) {
-            row.y = (row.y / maxValue);
-        }
-
         for (Quad quad : quads) {
-            quad.kSquare = 1.0f;//maxSquare * 2.0 / quad.Square;
+            quad.kSquare = maxSquare / quad.Square;
         }
     }
 
-    private double function(double x, double delta){
-        return Math.cos(x) * delta;
-    }
-
-    public void clear(){
+    @Override
+    public void clear() {
         for (Quad quad : quads) {
             quad.CollisionsCount = 0;
-            quad.Color = 1.0f;
+            quad.Color = 1.0;
         }
         maxArrayCounter = 0;
         totalPoint = 0;
@@ -137,14 +109,15 @@ public class Lab5 extends LabAbstraction {
         LastRay = new Vec3d();
     }
 
-    private double cameraPosition = -Math.PI * 0.5;
+    private double cameraPosition = 0.0;
     private void FrameLogic(){
         if(!isStop){
-            cameraPosition += 0.01 % ((float)Math.PI * 2.0);
+            cameraPosition = cameraPosition + 0.01 % ((float)Math.PI * 2.0);
         }
+
         Camera.x = (Target.x + 2.5) * (float)Math.cos(cameraPosition);
         Camera.y = (Target.y + 2.5) * (float)Math.sin(cameraPosition);
-        Camera.z = Target.z + Math.sin(1.0) * 2.01;
+        Camera.z = Target.z + (float)Math.sin(cameraPosition) * 2.0;
     }
 
     public void setGl(GLAutoDrawable drawable){
@@ -156,7 +129,7 @@ public class Lab5 extends LabAbstraction {
             glu = GLU.createGLU(gl);
         }
     }
-    
+
     @Override
     public void init(GLAutoDrawable drawable) {
         setGl(drawable);
@@ -184,49 +157,16 @@ public class Lab5 extends LabAbstraction {
         }
     }
 
-    private double interpolation(double x, Vec2d bigger, Vec2d smaller){
-        return smaller.y + (bigger.y - smaller.y) / (bigger.x - smaller.x) * (x - smaller.x);
-    }
-
     public synchronized void addPoint(){
-        int minimalNumber = 0;
-        double minimalDifferent = Double.MAX_VALUE;
-        double randomValue = random.nextDouble();
-        boolean isLarger = true;
+        double h = (2.0f * random.nextFloat() - 1.0f) * radius;
+        double angleTh = (float)Math.asin(h / radius);
+        double angleFi = random.nextFloat() * ((float)Math.PI * 2.0f);
 
-        for(int iterator = 0; iterator < table.length; iterator++){
-            double different = randomValue - table[iterator].x;
-            double absDifferent = Math.abs(different);
-
-            if(absDifferent < minimalDifferent){
-                minimalDifferent = absDifferent;
-                minimalNumber = iterator;
-                isLarger = different > 0.0;
-            }
-        }
-
-        Double value;
-        if(isLarger){
-            if(minimalNumber + 1 < table.length)
-                value = interpolation(randomValue, table[minimalNumber], table[minimalNumber + 1]);
-            else
-                value = interpolation(randomValue, table[minimalNumber - 1], table[minimalNumber]);
-        }
-        else
-        {
-            if(minimalNumber > 0)
-                value = interpolation(randomValue, table[minimalNumber - 1], table[minimalNumber]);
-            else
-                value = interpolation(randomValue, table[minimalNumber], table[minimalNumber + 1]);
-        }
-
-        float angleTh = (float)(value * Math.PI * 0.5);
-        float angleFi = (float)(random.nextDouble() * Math.PI * 2.0);
-        Vec3d origin = new Vec3d(0.0, 0.0, 0.0);
+        Vec3d origin = new Vec3d(Target.x, Target.y, Target.z);
         Vec3d direction = new Vec3d(
-                Math.cos(angleTh) * Math.cos(angleFi),
-                Math.cos(angleTh) * Math.sin(angleFi),
-                Math.sin(angleTh));
+                origin.x + (float)Math.cos(angleTh) * (float)Math.cos(angleFi) * radius,
+                origin.y + (float)Math.cos(angleTh) * (float)Math.sin(angleFi) * radius,
+                origin.z + (float)Math.sin(angleTh) * radius);
         direction.normalize();
         totalPoint++;
 
@@ -255,7 +195,7 @@ public class Lab5 extends LabAbstraction {
         LastEye.set(origin);
         LastRay.set(origin);
         LastRay.add(direction);
-        LastRay.mul(10.0);
+        LastRay.mul(10.0f);
     }
 
     @Override
@@ -273,7 +213,7 @@ public class Lab5 extends LabAbstraction {
         gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
         gl.glMatrixMode(GL2.GL_PROJECTION);
         gl.glLoadIdentity();
-        glu.gluPerspective(60.0f, width / height, 0.1f, 1000.0f);
+        glu.gluPerspective(60.0f, width/ height, 0.1f, 1000.0f);
         glu.gluLookAt(Camera.x, Camera.y, Camera.z, Target.x, Target.y, Target.z, 0.0f, 0.0f, 1.0f);
 
         gl.glMatrixMode(GL2.GL_MODELVIEW);
@@ -289,13 +229,13 @@ public class Lab5 extends LabAbstraction {
         gl.glEnd();
 
         gl.glBegin(gl.GL_LINES);
-            gl.glColor3f(0.0f, 1.0f, 0.0f);
+            gl.glColor3d(0.0, 1.0, 0.0);
             gl.glVertex3d(LastEye.x, LastEye.y, LastEye.z);
             gl.glVertex3d(LastRay.x, LastRay.y, LastRay.z);
         gl.glEnd();
 
 //        gl.glColor3d(0.0f, 0.0f, 0.0f);
-//        double k = 1.001;
+//        double k = 1.001f;
 //        for (Quad quad : quads) {
 //            gl.glBegin(gl.GL_LINE_LOOP);
 //                gl.glVertex3d(quad.A.sectorX * k, quad.A.sectorY * k, quad.A.z * k);
@@ -314,10 +254,10 @@ public class Lab5 extends LabAbstraction {
         gl.glBegin(gl.GL_QUADS);
         for (Quad quad : quads) {
             gl.glColor3d(quad.Color, quad.Color, quad.Color);
-            gl.glVertex2d(quad.sectorX * sizeCells, quad.sectorY * sizeCells);
-            gl.glVertex2d(quad.sectorX * sizeCells + sizeCells, quad.sectorY * sizeCells);
-            gl.glVertex2d(quad.sectorX * sizeCells + sizeCells, quad.sectorY * sizeCells + sizeCells);
-            gl.glVertex2d(quad.sectorX * sizeCells, quad.sectorY * sizeCells + sizeCells);
+            gl.glVertex2d(quad.sectorY * sizeCells, quad.sectorX * sizeCells);
+            gl.glVertex2d(quad.sectorY * sizeCells + sizeCells, quad.sectorX * sizeCells);
+            gl.glVertex2d(quad.sectorY * sizeCells + sizeCells, quad.sectorX * sizeCells + sizeCells);
+            gl.glVertex2d(quad.sectorY * sizeCells, quad.sectorX * sizeCells + sizeCells);
         }
         gl.glEnd();
 

@@ -1,4 +1,4 @@
-package Labs.Abstractions;
+package Abstractions;
 
 import com.sun.javafx.geom.Vec3d;
 

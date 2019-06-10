@@ -1,4 +1,4 @@
-package Labs.Interfaces;
+package Interfaces;
 
 import com.sun.javafx.geom.Vec3d;
 

@@ -1,7 +1,7 @@
-package Labs.Entities;
+package Entities;
 
-import Labs.Abstractions.ContainsTriangleAbstraction;
-import Labs.Interfaces.ICollided;
+import Abstractions.ContainsTriangleAbstraction;
+import Interfaces.ICollided;
 import com.sun.javafx.geom.Vec3d;
 
 public class Quad extends ContainsTriangleAbstraction implements ICollided {

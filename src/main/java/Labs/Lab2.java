@@ -1,6 +1,6 @@
 package Labs;
 
-import Labs.Abstractions.LabAbstraction;
+import Abstractions.LabAbstraction;
 import com.jogamp.newt.opengl.GLWindow;
 import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.GLAutoDrawable;
